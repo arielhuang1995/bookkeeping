@@ -1,2 +1,0 @@
-com/example/bookkeeping/BookkeepingApplicationTests.java
- com.example.bookkeeping.BookkeepingApplicationTests
