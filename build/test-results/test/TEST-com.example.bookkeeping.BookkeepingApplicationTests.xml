@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.bookkeeping.BookkeepingApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2021-02-02T08:29:53" hostname="ArieldeMacBook-Pro.local" time="3.002">
+  <properties/>
+  <testcase name="contextLoads()" classname="com.example.bookkeeping.BookkeepingApplicationTests" time="3.002"/>
+  <system-out><![CDATA[
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
