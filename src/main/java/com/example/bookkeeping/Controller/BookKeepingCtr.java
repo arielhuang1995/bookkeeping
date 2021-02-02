@@ -1,9 +1,9 @@
 package com.example.bookkeeping.Controller;
 
 import com.example.bookkeeping.Entity.Account;
+import com.example.bookkeeping.Entity.vo.AccountVo;
 import com.example.bookkeeping.Entity.vo.SearchAccountVo;
 import com.example.bookkeeping.Service.BookKeepingService;
-import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +19,7 @@ public class BookKeepingCtr {
   private final BookKeepingService bookKeepingService;
 
   @PostMapping("add")
-  public String add(@RequestBody Account account) {
+  public String add(@RequestBody AccountVo account) {
     bookKeepingService.createAccount(account);
     return "Success!";
   }
