@@ -89,6 +89,7 @@ public class BookKeepingService {
         null != searchAccountVo.getStartDate() && null != searchAccountVo.getEndDate(),
         "請輸入完整時間區間");
 
+    //java 8之後盡量不要再用 Date這個型別，原因下次解釋
     List<Account> result =
         accountList.stream()
             .filter(
