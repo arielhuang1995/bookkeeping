@@ -1,4 +1,4 @@
-package com.example.bookkeeping.Entity.vo;
+package com.example.bookkeeping.Controller.vo;
 
 import lombok.Data;
 

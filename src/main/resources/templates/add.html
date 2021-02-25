@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>新增帳目</title>
+</head>
+<body>
+<main>
+<form id="newAccount">
+    <label for="amount">消費金額: </label>
+    <input id="amount" name="amount" type="number"/>
+    <label for="item">消費項目: </label>
+    <input id="item" name="item" type="text"/>
+    <label for="remark">備註: </label>
+    <input id="remark" name="remark" type="text"/>
+    <p><input type="submit" value="Submit" /><input type="reset" value="Reset" /></p>
+</form>
+</main>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+<script type="text/javascript">
+    $(function() {
+        $('#newAccount').submit(function(e) {
+            e.preventDefault();
+            const data = getInsertData();
+            console.log('data',data)
+            insertData(data);
+        })
+    });
+
+    const getInsertData = () => {
+        console.log('getInsertData');
+        return $('#newAccount').serializeArray().reduce((perv, current) => {
+            perv[current.name] = current.value;
+            return perv;
+        }, {});
+    }
+
+    const insertData = data => {
+        $.ajax({
+            url: '/api/bookKeeping/add',
+            type: 'POST',
+            data: JSON.stringify(data),
+            cache: false,
+        }).done(function (res) {
+            if(res == 'Success!'){
+                window.location ='index.html';}
+            else {
+                alert('Fail!');
+                window.location ='index.html';}
+        });
+    }
+</script>
+</body>
+</html>

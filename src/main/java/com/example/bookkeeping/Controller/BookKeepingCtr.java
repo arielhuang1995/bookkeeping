@@ -1,13 +1,16 @@
 package com.example.bookkeeping.Controller;
 
-import com.example.bookkeeping.Entity.Account;
-import com.example.bookkeeping.Entity.vo.AccountVo;
-import com.example.bookkeeping.Entity.vo.SearchAccountVo;
+import com.example.bookkeeping.Controller.vo.AccountVo;
+import com.example.bookkeeping.Controller.vo.SearchAccountVo;
 import com.example.bookkeeping.Service.BookKeepingService;
+import com.example.bookkeeping.Service.Dto.ReportInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -18,6 +21,12 @@ public class BookKeepingCtr {
 
   private final BookKeepingService bookKeepingService;
 
+  // 首頁進入點
+  @RequestMapping("/")
+  public String list() {
+    return "redirect:/index";
+  }
+
   @PostMapping("add")
   public String add(@RequestBody AccountVo account) {
     bookKeepingService.createAccount(account);
@@ -25,7 +34,7 @@ public class BookKeepingCtr {
   }
 
   @PostMapping("update")
-  public String update(@RequestBody Account account) {
+  public String update(@RequestBody AccountVo account) {
     bookKeepingService.updateAccount(account);
     return "Success!";
   }
@@ -43,7 +52,7 @@ public class BookKeepingCtr {
   }
 
   @PostMapping("report")
-  public Map<String, Object> report(@RequestBody SearchAccountVo searchAccountVo) {
+  public ReportInfoDto report(@RequestBody SearchAccountVo searchAccountVo) {
     return bookKeepingService.report(searchAccountVo);
   }
 }
