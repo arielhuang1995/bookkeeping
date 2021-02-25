@@ -6,11 +6,8 @@ import com.example.bookkeeping.Service.BookKeepingService;
 import com.example.bookkeeping.Service.Dto.ReportInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -47,7 +44,9 @@ public class BookKeepingCtr {
 
   @PostMapping("search")
   public Map<String, Object> search(@RequestBody(required = false) SearchAccountVo searchAccountVo) {
-      if(searchAccountVo == null) searchAccountVo = new SearchAccountVo();
+      if(searchAccountVo == null)
+        searchAccountVo = new SearchAccountVo();
+
       return bookKeepingService.searchAccount(searchAccountVo);
   }
 

@@ -12,8 +12,11 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -24,11 +27,11 @@ public class BookKeepingService {
   private final AccountDao accountDAO;
 
   public void createAccount(AccountVo accountVo) {
-    Preconditions.checkState(null != accountVo.getAmount(), "請輸入金額");
+    Preconditions.checkNotNull(accountVo.getAmount(), "請輸入金額");
     Preconditions.checkState(Strings.isNotBlank(accountVo.getItem()), "請輸入項目");
 
     Account accountEntity = new Account();
-    accountEntity.setCreateTime(new Date());
+    accountEntity.setCreateTime(LocalDateTime.now());
     accountEntity.setAmount(accountVo.getAmount());
     accountEntity.setItem(accountVo.getItem());
 
@@ -40,73 +43,76 @@ public class BookKeepingService {
   }
 
   public void updateAccount(AccountVo vo) {
-    Account accountFromDB = accountDAO.get(vo.getId());
-    Preconditions.checkState(accountFromDB != null, "查無此筆資料！");
 
-    accountFromDB.setItem(vo.getItem());
-    accountFromDB.setAmount(vo.getAmount());
-    accountFromDB.setUpdateTime(new Date());
+    Optional<Account> accountFromDB = accountDAO.get(vo.getId());
+//    Preconditions.checkState(accountFromDB.isPresent(), "查無此筆資料！");
 
-    accountDAO.update(accountFromDB);
+    accountFromDB.ifPresent(a -> {
+      a.setItem(vo.getItem());
+      a.setAmount(vo.getAmount());
+//      a.setUpdateTime(LocalDateTime.now());
+
+      accountDAO.update(a);
+    });
   }
 
   public Map<String, Object> searchAccount(SearchAccountVo searchAccountVo) {
-    // TODO 重構 searchAccount,抽出searchAccount、report 共用的部份
-    Map<String, Object> response = new HashMap<>();
 
-    // TODO 把檢查＆給預設值抽去vo
-    if (null == searchAccountVo.getStartDate() && null == searchAccountVo.getEndDate()) {
-      Calendar calendar = Calendar.getInstance();
-      calendar.setTimeInMillis(new Date().getTime());
-      calendar.set(Calendar.DAY_OF_MONTH, 1);
-      searchAccountVo.setStartDate(calendar.getTime());
-      calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-      searchAccountVo.setEndDate(calendar.getTime());
-    }
-    Preconditions.checkState(
-        null != searchAccountVo.getStartDate() && null != searchAccountVo.getEndDate(),
-        "請輸入完整時間區間");
+    // vo有給定default，這些檢查應該都可以拿掉
+//    if (null == searchAccountVo.getStartDate() && null == searchAccountVo.getEndDate()) {
+//      Calendar calendar = Calendar.getInstance();
+//      calendar.setTimeInMillis(new Date().getTime());
+//      calendar.set(Calendar.DAY_OF_MONTH, 1);
+//      searchAccountVo.setStartDate(calendar.getTime());
+//
+//      calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+//      searchAccountVo.setEndDate(calendar.getTime());
+//    }
+
+
+//    Preconditions.checkState(
+//            null != searchAccountVo.getStartDate()
+//                    && null != searchAccountVo.getEndDate(),
+//            "請輸入完整時間區間");
+
+
     List<Account> result = accountDAO.search(searchAccountVo);
     if (Strings.isNotEmpty(searchAccountVo.getKeyWord4Item())) {
       result.stream()
           .filter(account -> account.getItem().contains(searchAccountVo.getKeyWord4Item()));
     }
-    Double sumOfAmount = calSumOfAmount(result);
 
+    Map<String, Object> response = new HashMap<>();//羅輯層不應有response的概念
     response.put("accountList", result);
-    response.put("sumOfAccount", sumOfAmount);
+    response.put("sumOfAccount", calcSumOfAmount(result));
 
     return response;
   }
 
   public ReportInfoDto report(SearchAccountVo searchAccountVo) {
-    Preconditions.checkState(null != searchAccountVo, "請輸入查詢時間");
-    List<Account> accountList = accountDAO.search(searchAccountVo);
-    Double sumOfAmount = calSumOfAmount(accountList);
-    BigDecimal bdSumOfAmount = new BigDecimal(sumOfAmount); //TODO 處理空值情況
-    BigDecimal bdAccountNum = new BigDecimal(accountList.size());
-    Double avgOfAmount = bdSumOfAmount.divide(bdAccountNum, 2).doubleValue();
-    Double maxAmount =
-        accountList.stream()
-            .collect(Collectors.maxBy(Comparator.comparing(Account::getAmount)))
-            .get()
-            .getAmount()
-            .doubleValue();
 
-    // TODO：請思考如何不用remove的方式來實作這邊..
+    Preconditions.checkNotNull(searchAccountVo, "請輸入查詢時間");
+    List<Account> accountList = accountDAO.search(searchAccountVo);
 
     return ReportInfoDto.builder()
-            .sumOfAmount(sumOfAmount)
-            .avgOfAmount(avgOfAmount)
-            .maxAmount(maxAmount)
+            .sumOfAmount(calcSumOfAmount(accountList))
+            .avgOfAmount(calcAvgOfAmount(accountList))
+            .maxAmount(calcMaxAmount(accountList))
             .build();
   }
 
-  private Double calSumOfAmount(List<Account> accountList){
-    Double sumOfAmount = 0D;
-    for (Account account : accountList) {
-      sumOfAmount = Double.sum(sumOfAmount, account.getAmount());
-    }
-    return sumOfAmount;
+  private double calcAvgOfAmount(List<Account> accountList) {
+    BigDecimal bdSumOfAmount = BigDecimal.valueOf(calcSumOfAmount(accountList));//TODO 處理空值情況
+    BigDecimal bdAccountNum = new BigDecimal(accountList.size());
+
+    return bdSumOfAmount.divide(bdAccountNum, 2).doubleValue();
+  }
+
+  private double calcMaxAmount(List<Account> accountList) {
+    return accountList.stream().mapToDouble(Account::getAmount).max().getAsDouble();
+  }
+
+  private Double calcSumOfAmount(List<Account> accountList){
+    return accountList.stream().mapToDouble(Account::getAmount).sum();
   }
 }
