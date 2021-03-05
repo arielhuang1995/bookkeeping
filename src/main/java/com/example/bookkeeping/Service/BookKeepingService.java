@@ -27,7 +27,7 @@ public class BookKeepingService {
 
   private final IAccountDao accountDAO = new AccountDaoDB();
 
-  public Result<AccountVo> createAccount(AccountVo accountVo) {
+  public Result<Account> createAccount(AccountVo accountVo) {
     Preconditions.checkNotNull(accountVo.getAmount(), "請輸入金額");
     Preconditions.checkState(Strings.isNotBlank(accountVo.getItem()), "請輸入項目");
 
@@ -37,10 +37,11 @@ public class BookKeepingService {
     accountEntity.setItem(accountVo.getItem());
 
 
-    Result<AccountVo> result = new Result<>();
+    Result<Account> result = new Result<>();
 
     try {
       accountDAO.add(accountEntity);
+      result.setData(accountEntity);
       result.setSuccess(true);
 
       return result;

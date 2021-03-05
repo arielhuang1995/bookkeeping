@@ -2,6 +2,7 @@ package com.example.bookkeeping.Controller;
 
 import com.example.bookkeeping.Controller.vo.AccountVo;
 import com.example.bookkeeping.Controller.vo.SearchAccountVo;
+import com.example.bookkeeping.Entity.Account;
 import com.example.bookkeeping.Service.BookKeepingService;
 import com.example.bookkeeping.Service.Dto.ReportInfoDto;
 import com.example.bookkeeping.Service.Dto.Result;
@@ -27,7 +28,7 @@ public class BookKeepingCtr {
 
   @PostMapping("add")
   public String add(@RequestBody AccountVo account) {
-    Result<AccountVo> result = bookKeepingService.createAccount(account);
+    Result<Account> result = bookKeepingService.createAccount(account);
 
 //    if (result.getSuccess()) {
 //      return result.getData();
