@@ -6,6 +6,7 @@ import com.example.bookkeeping.Dao.AccountDaoDB;
 import com.example.bookkeeping.Dao.IAccountDao;
 import com.example.bookkeeping.Entity.Account;
 import com.example.bookkeeping.Service.Dto.ReportInfoDto;
+import com.example.bookkeeping.Service.Dto.Result;
 import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ public class BookKeepingService {
 
   private final IAccountDao accountDAO = new AccountDaoDB();
 
-  public void createAccount(AccountVo accountVo) {
+  public Result<AccountVo> createAccount(AccountVo accountVo) {
     Preconditions.checkNotNull(accountVo.getAmount(), "請輸入金額");
     Preconditions.checkState(Strings.isNotBlank(accountVo.getItem()), "請輸入項目");
 
@@ -35,7 +36,24 @@ public class BookKeepingService {
     accountEntity.setAmount(accountVo.getAmount());
     accountEntity.setItem(accountVo.getItem());
 
-    accountDAO.add(accountEntity);
+
+    Result<AccountVo> result = new Result<>();
+
+    try {
+      accountDAO.add(accountEntity);
+      result.setSuccess(true);
+
+      return result;
+    }
+    catch (Exception e)
+    {
+      result.setSuccess(false);
+      result.setErrMsg(e.getMessage());
+      result.setErrCode("500");
+
+      return result;
+    }
+
   }
 
   public void deleteAccount(Integer id) {

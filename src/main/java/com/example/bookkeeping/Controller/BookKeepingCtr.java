@@ -4,6 +4,7 @@ import com.example.bookkeeping.Controller.vo.AccountVo;
 import com.example.bookkeeping.Controller.vo.SearchAccountVo;
 import com.example.bookkeeping.Service.BookKeepingService;
 import com.example.bookkeeping.Service.Dto.ReportInfoDto;
+import com.example.bookkeeping.Service.Dto.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,12 @@ public class BookKeepingCtr {
 
   @PostMapping("add")
   public String add(@RequestBody AccountVo account) {
-    bookKeepingService.createAccount(account);
+    Result<AccountVo> result = bookKeepingService.createAccount(account);
+
+//    if (result.getSuccess()) {
+//      return result.getData();
+//    }
+
     return "Success!";
   }
 
