@@ -34,7 +34,8 @@ public class BookKeepingCtr {
 //      return result.getData();
 //    }
 
-    return "Success!";
+    return result.toViewErrorMsg();
+//    return "Success!";
   }
 
   @PostMapping("update")
