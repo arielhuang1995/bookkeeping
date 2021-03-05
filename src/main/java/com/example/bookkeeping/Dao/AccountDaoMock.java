@@ -11,16 +11,18 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-public class AccountDao {
+public class AccountDaoMock implements IAccountDao {
     //TODO CRUD...
 
     private final List<Account> accountList = new ArrayList<>();
 
+    @Override
     public void add(Account account){
         account.setId(findMaxId() + 1);
         accountList.add(account);
     }
 
+    @Override
     public void delete(Integer id){
 //        accountList.forEach(
 //                account -> {
@@ -32,6 +34,7 @@ public class AccountDao {
         accountOpt.ifPresent(this.accountList::remove);
     }
 
+    @Override
     public void update(Account newAccount){
 //        accountList.forEach(
 //                account -> {
@@ -52,13 +55,15 @@ public class AccountDao {
         });
     }
 
+    @Override
     public Optional<Account> get(Integer id){
         return this.accountList.stream()
                 .filter(account -> id.equals(account.getId()))
                 .findAny();
     }
 
-    public List<Account> search(SearchAccountVo searchAccountVo){
+    @Override
+    public List<Account> query(SearchAccountVo searchAccountVo){
         return accountList.stream()
                 .filter(account -> account.getCreateTime().isAfter(searchAccountVo.getStartDate())
                         && account.getCreateTime().isBefore(searchAccountVo.getEndDate()))

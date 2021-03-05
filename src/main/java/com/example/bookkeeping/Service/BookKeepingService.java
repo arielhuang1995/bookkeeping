@@ -2,7 +2,8 @@ package com.example.bookkeeping.Service;
 
 import com.example.bookkeeping.Controller.vo.AccountVo;
 import com.example.bookkeeping.Controller.vo.SearchAccountVo;
-import com.example.bookkeeping.Dao.AccountDao;
+import com.example.bookkeeping.Dao.AccountDaoDB;
+import com.example.bookkeeping.Dao.IAccountDao;
 import com.example.bookkeeping.Entity.Account;
 import com.example.bookkeeping.Service.Dto.ReportInfoDto;
 import com.google.common.base.Preconditions;
@@ -23,8 +24,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BookKeepingService {
 
-  // TODO:DataAccessObject(DAO) 封裝
-  private final AccountDao accountDAO;
+  private final IAccountDao accountDAO = new AccountDaoDB();
 
   public void createAccount(AccountVo accountVo) {
     Preconditions.checkNotNull(accountVo.getAmount(), "請輸入金額");
@@ -76,7 +76,7 @@ public class BookKeepingService {
 //            "請輸入完整時間區間");
 
 
-    List<Account> result = accountDAO.search(searchAccountVo);
+    List<Account> result = accountDAO.query(searchAccountVo);
     if (Strings.isNotEmpty(searchAccountVo.getKeyWord4Item())) {
       result.stream()
           .filter(account -> account.getItem().contains(searchAccountVo.getKeyWord4Item()));
@@ -92,7 +92,7 @@ public class BookKeepingService {
   public ReportInfoDto report(SearchAccountVo searchAccountVo) {
 
     Preconditions.checkNotNull(searchAccountVo, "請輸入查詢時間");
-    List<Account> accountList = accountDAO.search(searchAccountVo);
+    List<Account> accountList = accountDAO.query(searchAccountVo);
 
     return ReportInfoDto.builder()
             .sumOfAmount(calcSumOfAmount(accountList))
