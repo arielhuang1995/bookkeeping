@@ -31,6 +31,12 @@ public class AccountDaoMock implements IAccountDao {
 //                    }
 //                });
         Optional<Account> accountOpt = this.get(id);
+
+//        if (accountOpt.isPresent()) {
+//            //...
+//            this.accountList.remove(accountOpt.get())
+//        }
+
         accountOpt.ifPresent(this.accountList::remove);
     }
 

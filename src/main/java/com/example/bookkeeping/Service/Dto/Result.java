@@ -23,5 +23,7 @@ public class Result<T> {
         if (this.errCode.equals("2")) {
             return "系統爆炸，請登出!!";
         }
+
+        return "OK";
     }
 }
