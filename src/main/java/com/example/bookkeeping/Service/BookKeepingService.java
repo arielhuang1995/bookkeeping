@@ -2,9 +2,10 @@ package com.example.bookkeeping.Service;
 
 import com.example.bookkeeping.Controller.vo.AccountVo;
 import com.example.bookkeeping.Controller.vo.SearchAccountVo;
-import com.example.bookkeeping.Dao.AccountDaoDB;
+import com.example.bookkeeping.Dao.AccountDaoMock;
 import com.example.bookkeeping.Dao.IAccountDao;
 import com.example.bookkeeping.Entity.Account;
+import com.example.bookkeeping.Service.Dto.QueryInfoDto;
 import com.example.bookkeeping.Service.Dto.ReportInfoDto;
 import com.example.bookkeeping.Service.Dto.Result;
 import com.google.common.base.Preconditions;
@@ -15,17 +16,16 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookKeepingService {
 
-  private final IAccountDao accountDAO = new AccountDaoDB();
+  private final IAccountDao accountDAO = new AccountDaoMock();
 
   public Result<Account> createAccount(AccountVo accountVo) {
     Preconditions.checkNotNull(accountVo.getAmount(), "請輸入金額");
@@ -35,6 +35,7 @@ public class BookKeepingService {
     accountEntity.setCreateTime(LocalDateTime.now());
     accountEntity.setAmount(accountVo.getAmount());
     accountEntity.setItem(accountVo.getItem());
+    accountEntity.setRemark(accountVo.getRemark());
 
 
     Result<Account> result = new Result<>();
@@ -75,37 +76,35 @@ public class BookKeepingService {
     });
   }
 
-  public Map<String, Object> searchAccount(SearchAccountVo searchAccountVo) {
+  public Result<QueryInfoDto> searchAccount(SearchAccountVo searchAccountVo) {
 
-    // vo有給定default，這些檢查應該都可以拿掉
-//    if (null == searchAccountVo.getStartDate() && null == searchAccountVo.getEndDate()) {
-//      Calendar calendar = Calendar.getInstance();
-//      calendar.setTimeInMillis(new Date().getTime());
-//      calendar.set(Calendar.DAY_OF_MONTH, 1);
-//      searchAccountVo.setStartDate(calendar.getTime());
-//
-//      calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-//      searchAccountVo.setEndDate(calendar.getTime());
-//    }
+    List<Account> query = accountDAO.query(searchAccountVo)
+            .stream().filter(x -> {
+              if (Strings.isNotEmpty(searchAccountVo.getKeyWord4Item())) {
+                return x.getItem().contains(searchAccountVo.getKeyWord4Item());
+              }
+              return true;
+            }).collect(Collectors.toList());
 
+    Result<QueryInfoDto> result = new Result<>();
 
-//    Preconditions.checkState(
-//            null != searchAccountVo.getStartDate()
-//                    && null != searchAccountVo.getEndDate(),
-//            "請輸入完整時間區間");
+    try {
+      result.setData(QueryInfoDto.builder()
+              .list(query)
+              .sumOfAmount(calcSumOfAmount(query))
+              .build());
+      result.setSuccess(true);
 
-
-    List<Account> result = accountDAO.query(searchAccountVo);
-    if (Strings.isNotEmpty(searchAccountVo.getKeyWord4Item())) {
-      result.stream()
-          .filter(account -> account.getItem().contains(searchAccountVo.getKeyWord4Item()));
+      return result;
     }
+    catch (Exception e)
+    {
+      result.setSuccess(false);
+      result.setErrMsg(e.getMessage());
+      result.setErrCode("500");
 
-    Map<String, Object> response = new HashMap<>();//羅輯層不應有response的概念
-    response.put("accountList", result);
-    response.put("sumOfAccount", calcSumOfAmount(result));
-
-    return response;
+      return result;
+    }
   }
 
   public ReportInfoDto report(SearchAccountVo searchAccountVo) {

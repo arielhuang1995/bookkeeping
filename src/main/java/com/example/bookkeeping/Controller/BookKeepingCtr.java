@@ -4,13 +4,12 @@ import com.example.bookkeeping.Controller.vo.AccountVo;
 import com.example.bookkeeping.Controller.vo.SearchAccountVo;
 import com.example.bookkeeping.Entity.Account;
 import com.example.bookkeeping.Service.BookKeepingService;
+import com.example.bookkeeping.Service.Dto.QueryInfoDto;
 import com.example.bookkeeping.Service.Dto.ReportInfoDto;
 import com.example.bookkeeping.Service.Dto.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -20,22 +19,10 @@ public class BookKeepingCtr {
 
   private final BookKeepingService bookKeepingService;
 
-  // 首頁進入點
-  @RequestMapping("/")
-  public String list() {
-    return "redirect:/index";
-  }
 
   @PostMapping("add")
-  public String add(@RequestBody AccountVo account) {
-    Result<Account> result = bookKeepingService.createAccount(account);
-
-//    if (result.getSuccess()) {
-//      return result.getData();
-//    }
-
-    return result.toViewErrorMsg();
-//    return "Success!";
+  public Result<Account> add(@RequestBody AccountVo account) {
+    return bookKeepingService.createAccount(account);
   }
 
   @PostMapping("update")
@@ -51,7 +38,7 @@ public class BookKeepingCtr {
   }
 
   @PostMapping("search")
-  public Map<String, Object> search(@RequestBody(required = false) SearchAccountVo searchAccountVo) {
+  public Result<QueryInfoDto> search(@RequestBody(required = false) SearchAccountVo searchAccountVo) {
       if(searchAccountVo == null)
         searchAccountVo = new SearchAccountVo();
 
