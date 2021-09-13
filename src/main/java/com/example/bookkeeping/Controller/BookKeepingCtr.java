@@ -20,23 +20,27 @@ public class BookKeepingCtr {
   private final BookKeepingService bookKeepingService;
 
 
+  @CrossOrigin
   @PostMapping("add")
   public Result<Account> add(@RequestBody AccountVo account) {
     return bookKeepingService.createAccount(account);
   }
 
+  @CrossOrigin
   @PostMapping("update")
   public String update(@RequestBody AccountVo account) {
     bookKeepingService.updateAccount(account);
     return "Success!";
   }
 
+  @CrossOrigin
   @GetMapping("delete")
   public String delete(@RequestParam("id") Integer id) {
     bookKeepingService.deleteAccount(id);
     return "Success!";
   }
 
+  @CrossOrigin
   @PostMapping("search")
   public Result<QueryInfoDto> search(@RequestBody(required = false) SearchAccountVo searchAccountVo) {
       if(searchAccountVo == null)
@@ -45,8 +49,15 @@ public class BookKeepingCtr {
       return bookKeepingService.searchAccount(searchAccountVo);
   }
 
+  @CrossOrigin
   @PostMapping("report")
   public ReportInfoDto report(@RequestBody SearchAccountVo searchAccountVo) {
     return bookKeepingService.report(searchAccountVo);
+  }
+
+  @CrossOrigin
+  @GetMapping("getOne")
+  public Account getOne(@RequestParam("id") Integer id) {
+    return bookKeepingService.findAccountById(id);
   }
 }

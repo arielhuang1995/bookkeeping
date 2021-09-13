@@ -2,7 +2,9 @@ package com.example.bookkeeping.Service;
 
 import com.example.bookkeeping.Controller.vo.AccountVo;
 import com.example.bookkeeping.Controller.vo.SearchAccountVo;
+import com.example.bookkeeping.Dao.AccountDaoDB;
 import com.example.bookkeeping.Dao.AccountDaoMock;
+import com.example.bookkeeping.Dao.AccountRepository;
 import com.example.bookkeeping.Dao.IAccountDao;
 import com.example.bookkeeping.Entity.Account;
 import com.example.bookkeeping.Service.Dto.QueryInfoDto;
@@ -12,6 +14,7 @@ import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -25,7 +28,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookKeepingService {
 
-  private final IAccountDao accountDAO = new AccountDaoMock();
+//  private final IAccountDao accountDAO = new AccountDaoDB(new AccountRepository());
+  private final IAccountDao accountDAO;
+//  private final AccountDaoDB accountDAO;
 
   public Result<Account> createAccount(AccountVo accountVo) {
     Preconditions.checkNotNull(accountVo.getAmount(), "請輸入金額");
@@ -70,6 +75,7 @@ public class BookKeepingService {
     accountFromDB.ifPresent(a -> {
       a.setItem(vo.getItem());
       a.setAmount(vo.getAmount());
+      a.setRemark(vo.getRemark());
 //      a.setUpdateTime(LocalDateTime.now());
 
       accountDAO.update(a);
@@ -90,7 +96,7 @@ public class BookKeepingService {
 
     try {
       result.setData(QueryInfoDto.builder()
-              .list(query)
+              .resultList(query)
               .sumOfAmount(calcSumOfAmount(query))
               .build());
       result.setSuccess(true);
@@ -117,6 +123,10 @@ public class BookKeepingService {
             .avgOfAmount(calcAvgOfAmount(accountList))
             .maxAmount(calcMaxAmount(accountList))
             .build();
+  }
+
+  public Account findAccountById(Integer id){
+    return accountDAO.get(id).get();
   }
 
   private double calcAvgOfAmount(List<Account> accountList) {

@@ -7,9 +7,9 @@ spring:
   transaction:
     rollback-on-commit-failure: true
   datasource:
-    url:
-    username:
-    password:
+    url: jdbc:mysql://localhost:3306/test
+    username: root
+    password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       minimumIdle: 120

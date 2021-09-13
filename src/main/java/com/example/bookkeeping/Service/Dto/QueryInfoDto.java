@@ -9,6 +9,6 @@ import java.util.List;
 @Data
 @Builder
 public class QueryInfoDto {
-    private List<Account> list;
+    private List<Account> resultList;
     private Double sumOfAmount;
 }
