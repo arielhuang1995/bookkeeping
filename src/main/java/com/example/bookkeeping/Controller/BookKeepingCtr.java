@@ -1,14 +1,15 @@
 package com.example.bookkeeping.Controller;
 
+import com.example.bookkeeping.Controller.vo.AccountVo;
+import com.example.bookkeeping.Controller.vo.SearchAccountVo;
 import com.example.bookkeeping.Entity.Account;
-import com.example.bookkeeping.Entity.vo.AccountVo;
-import com.example.bookkeeping.Entity.vo.SearchAccountVo;
 import com.example.bookkeeping.Service.BookKeepingService;
+import com.example.bookkeeping.Service.Dto.QueryInfoDto;
+import com.example.bookkeeping.Service.Dto.ReportInfoDto;
+import com.example.bookkeeping.Service.Dto.Result;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -18,32 +19,45 @@ public class BookKeepingCtr {
 
   private final BookKeepingService bookKeepingService;
 
+
+  @CrossOrigin
   @PostMapping("add")
-  public String add(@RequestBody AccountVo account) {
-    bookKeepingService.createAccount(account);
-    return "Success!";
+  public Result<Account> add(@RequestBody AccountVo account) {
+    return bookKeepingService.createAccount(account);
   }
 
+  @CrossOrigin
   @PostMapping("update")
-  public String update(@RequestBody Account account) {
+  public String update(@RequestBody AccountVo account) {
     bookKeepingService.updateAccount(account);
     return "Success!";
   }
 
+  @CrossOrigin
   @GetMapping("delete")
   public String delete(@RequestParam("id") Integer id) {
     bookKeepingService.deleteAccount(id);
     return "Success!";
   }
 
+  @CrossOrigin
   @PostMapping("search")
-  public Map<String, Object> search(@RequestBody(required = false) SearchAccountVo searchAccountVo) {
-      if(searchAccountVo == null) searchAccountVo = new SearchAccountVo();
+  public Result<QueryInfoDto> search(@RequestBody(required = false) SearchAccountVo searchAccountVo) {
+      if(searchAccountVo == null)
+        searchAccountVo = new SearchAccountVo();
+
       return bookKeepingService.searchAccount(searchAccountVo);
   }
 
+  @CrossOrigin
   @PostMapping("report")
-  public Map<String, Object> report(@RequestBody SearchAccountVo searchAccountVo) {
+  public ReportInfoDto report(@RequestBody SearchAccountVo searchAccountVo) {
     return bookKeepingService.report(searchAccountVo);
+  }
+
+  @CrossOrigin
+  @GetMapping("getOne")
+  public Account getOne(@RequestParam("id") Integer id) {
+    return bookKeepingService.findAccountById(id);
   }
 }

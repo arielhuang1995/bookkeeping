@@ -1,167 +1,146 @@
 package com.example.bookkeeping.Service;
 
+import com.example.bookkeeping.Controller.vo.AccountVo;
+import com.example.bookkeeping.Controller.vo.SearchAccountVo;
+import com.example.bookkeeping.Dao.AccountDaoDB;
+import com.example.bookkeeping.Dao.AccountDaoMock;
+import com.example.bookkeeping.Dao.AccountRepository;
+import com.example.bookkeeping.Dao.IAccountDao;
 import com.example.bookkeeping.Entity.Account;
-import com.example.bookkeeping.Entity.vo.AccountVo;
-import com.example.bookkeeping.Entity.vo.SearchAccountVo;
+import com.example.bookkeeping.Service.Dto.QueryInfoDto;
+import com.example.bookkeeping.Service.Dto.ReportInfoDto;
+import com.example.bookkeeping.Service.Dto.Result;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import lombok.Builder;
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class BookKeepingService {
 
-  //TODO:DataAccessObject(DAO) 封裝
-  private List<Account> accountList = new ArrayList<>();
+//  private final IAccountDao accountDAO = new AccountDaoDB(new AccountRepository());
+  private final IAccountDao accountDAO;
+//  private final AccountDaoDB accountDAO;
 
-  public void createAccount(AccountVo account) {
-    Preconditions.checkState(null != account.getAmount(), "請輸入金額");
-    Preconditions.checkState(Strings.isNotBlank(account.getItem()), "請輸入項目");
+  public Result<Account> createAccount(AccountVo accountVo) {
+    Preconditions.checkNotNull(accountVo.getAmount(), "請輸入金額");
+    Preconditions.checkState(Strings.isNotBlank(accountVo.getItem()), "請輸入項目");
 
     Account accountEntity = new Account();
-    accountEntity.setId(findMaxId() + 1);
-    accountEntity.setCreateTime(new Date());
-    accountEntity.setAmount(account.getAmount());//可能轉美金
-    accountEntity.setItem(account.getItem());//
+    accountEntity.setCreateTime(LocalDateTime.now());
+    accountEntity.setAmount(accountVo.getAmount());
+    accountEntity.setItem(accountVo.getItem());
+    accountEntity.setRemark(accountVo.getRemark());
 
 
-    accountList.add(accountEntity);
+    Result<Account> result = new Result<>();
+
+    try {
+      accountDAO.add(accountEntity);
+      result.setData(accountEntity);
+      result.setSuccess(true);
+
+      return result;
+    }
+    catch (Exception e)
+    {
+      result.setSuccess(false);
+      result.setErrMsg(e.getMessage());
+      result.setErrCode("500");
+
+      return result;
+    }
+
   }
 
   public void deleteAccount(Integer id) {
-    accountList.forEach(
-        account -> {
-          if (account.getId().equals(id)) {
-            accountList.remove(account);
-          }
-        });
-
-//    Optional<Account> account = accountList.stream()
-//            .filter(x -> x.getId().equals(id)).findFirst();
-//
-//    Account account1 = account.get();
-//
-//    accountList.remove(account1);
-
+    accountDAO.delete(id);
   }
 
-  public void updateAccount(Account newAccount) {
-    accountList.forEach(
-            account -> {
-              if (account.getId().equals(newAccount.getId())) {
-                Integer index = accountList.indexOf(account);
-                newAccount.setUpdateTime(new Date());
-                accountList.set(index, newAccount);
+  public void updateAccount(AccountVo vo) {
+
+    Optional<Account> accountFromDB = accountDAO.get(vo.getId());
+//    Preconditions.checkState(accountFromDB.isPresent(), "查無此筆資料！");
+
+    accountFromDB.ifPresent(a -> {
+      a.setItem(vo.getItem());
+      a.setAmount(vo.getAmount());
+      a.setRemark(vo.getRemark());
+//      a.setUpdateTime(LocalDateTime.now());
+
+      accountDAO.update(a);
+    });
+  }
+
+  public Result<QueryInfoDto> searchAccount(SearchAccountVo searchAccountVo) {
+
+    List<Account> query = accountDAO.query(searchAccountVo)
+            .stream().filter(x -> {
+              if (Strings.isNotEmpty(searchAccountVo.getKeyWord4Item())) {
+                return x.getItem().contains(searchAccountVo.getKeyWord4Item());
               }
-            });
+              return true;
+            }).collect(Collectors.toList());
+
+    Result<QueryInfoDto> result = new Result<>();
+
+    try {
+      result.setData(QueryInfoDto.builder()
+              .resultList(query)
+              .sumOfAmount(calcSumOfAmount(query))
+              .build());
+      result.setSuccess(true);
+
+      return result;
+    }
+    catch (Exception e)
+    {
+      result.setSuccess(false);
+      result.setErrMsg(e.getMessage());
+      result.setErrCode("500");
+
+      return result;
+    }
   }
 
-//  public void updateAccount_2(String id,AccountVo vo){
-//    //調用dao get data
-//    Account accountFromDB = dao.getAccountById(id);
-//    accountFromDB.setItem();
-//    accountFromDB.setUpdateTime();
-//    accountFromDB.setAmount();
-//
-//    dao.save(accountFromDB);
-//  }
+  public ReportInfoDto report(SearchAccountVo searchAccountVo) {
 
-  public Map<String, Object> searchAccount(SearchAccountVo searchAccountVo) {
-    //TODO 重構 searchAccount,抽出searchAccount、report 共用的部份
-    Map<String, Object> response = new HashMap<>();
-    Double sumOfAmount = Double.NaN;
-    if (null == searchAccountVo.getStartDate() && null == searchAccountVo.getEndDate()) {
-      Calendar calendar = Calendar.getInstance();
-      calendar.setTimeInMillis(new Date().getTime());
-      calendar.set(Calendar.DAY_OF_MONTH, 1);
-      searchAccountVo.setStartDate(calendar.getTime());
-      calendar.set(
-          Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-      searchAccountVo.setEndDate(calendar.getTime());
-    }
-    Preconditions.checkState(
-        null != searchAccountVo.getStartDate() && null != searchAccountVo.getEndDate(),
-        "請輸入完整時間區間");
+    Preconditions.checkNotNull(searchAccountVo, "請輸入查詢時間");
+    List<Account> accountList = accountDAO.query(searchAccountVo);
 
-    //java 8之後盡量不要再用 Date這個型別，原因下次解釋
-    List<Account> result =
-        accountList.stream()
-            .filter(
-                account ->
-                    account.getCreateTime().after(searchAccountVo.getStartDate())
-                        && account.getCreateTime().before(searchAccountVo.getEndDate()))
-            .collect(Collectors.toList());
-    if (Strings.isNotEmpty(searchAccountVo.getKeyWord4Item())) {
-      result.stream()
-          .filter(account -> account.getItem().contains(searchAccountVo.getKeyWord4Item()));
-    }
-    for (Account account : result) {
-      sumOfAmount = Double.sum(sumOfAmount, account.getAmount());
-    }
-
-    response.put("accountList", result);
-    response.put("sumOfAccount", sumOfAmount);
-
-    return response;
+    return ReportInfoDto.builder()
+            .sumOfAmount(calcSumOfAmount(accountList))
+            .avgOfAmount(calcAvgOfAmount(accountList))
+            .maxAmount(calcMaxAmount(accountList))
+            .build();
   }
 
-  public Map<String, Object>  report(SearchAccountVo searchAccountVo) {
-    Preconditions.checkState(null != searchAccountVo, "請輸入查詢時間");
-    Map<String, Object> response = searchAccount(searchAccountVo);
+  public Account findAccountById(Integer id){
+    return accountDAO.get(id).get();
+  }
 
-    //能不強轉，就不要強轉
-    List<Account> accountList = (List<Account>) response.get("accountList");
-    BigDecimal bdSumOfAmount = new BigDecimal(response.get("sumOfAmount").toString());
+  private double calcAvgOfAmount(List<Account> accountList) {
+    BigDecimal bdSumOfAmount = BigDecimal.valueOf(calcSumOfAmount(accountList));//TODO 處理空值情況
     BigDecimal bdAccountNum = new BigDecimal(accountList.size());
-    Double avgOfAmount = bdSumOfAmount.divide(bdAccountNum, 2).doubleValue();
-    Double maxAmount =
-        accountList.stream()
-            .collect(Collectors.maxBy(Comparator.comparing(Account::getAmount)))
-            .get()
-            .getAmount()
-            .doubleValue();
 
-    //TODO：請思考如何不用remove的方式來實作這邊..
-    response.remove("accountList");
-
-    //這個是弱型別的寫法
-    //請採用ReportInfo物件封裝
-    response.put("avgOfAmount", avgOfAmount);
-    response.put("maxAmount", maxAmount);
-
-
-//    return ReportInfo.builder()
-//            .accountList(new LinkedList<>())
-//            .avgOfAmount(0D)
-//            .build();
-
-    return response;
+    return bdSumOfAmount.divide(bdAccountNum, 2).doubleValue();
   }
 
-  @Data
-  @Builder
-  static class ReportInfo{
-    private List<String> accountList;
-    private Double avgOfAmount;
+  private double calcMaxAmount(List<Account> accountList) {
+    return accountList.stream().mapToDouble(Account::getAmount).max().getAsDouble();
   }
 
-  private Integer findMaxId() {
-    if (accountList.size() != 0) {
-      return accountList.stream()
-          .collect(Collectors.maxBy(Comparator.comparing(Account::getId)))
-          .get()
-          .getId();
-    } else {
-      return 0;
-    }
-
-
-//    return this.accountList.stream().mapToInt(Account::getId).max().orElse(0);
+  private Double calcSumOfAmount(List<Account> accountList){
+    return accountList.stream().mapToDouble(Account::getAmount).sum();
   }
 }
