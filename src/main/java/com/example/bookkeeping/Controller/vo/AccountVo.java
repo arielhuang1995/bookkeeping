@@ -2,7 +2,6 @@ package com.example.bookkeeping.Controller.vo;
 
 import lombok.Data;
 
-//todo:VO搬家
 @Data
 public class AccountVo {
     private Integer id;

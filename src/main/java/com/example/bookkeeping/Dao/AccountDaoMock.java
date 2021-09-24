@@ -2,6 +2,7 @@ package com.example.bookkeeping.Dao;
 
 import com.example.bookkeeping.Controller.vo.SearchAccountVo;
 import com.example.bookkeeping.Entity.Account;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -12,8 +13,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
+@ConditionalOnProperty(value = "app.api.factory", havingValue = "monk")
 public class AccountDaoMock implements IAccountDao {
-    //TODO CRUD...
 
     private final List<Account> accountList = new ArrayList<Account>(Arrays.asList(
             new Account(1,10.0,"Apple","Bought At Super Market"),
@@ -29,34 +30,12 @@ public class AccountDaoMock implements IAccountDao {
 
     @Override
     public void delete(Integer id){
-//        accountList.forEach(
-//                account -> {
-//                    if (account.getId().equals(id)) {
-//                        accountList.remove(account);
-//                    }
-//                });
         Optional<Account> accountOpt = this.get(id);
-
-//        if (accountOpt.isPresent()) {
-//            //...
-//            this.accountList.remove(accountOpt.get())
-//        }
-
         accountOpt.ifPresent(this.accountList::remove);
     }
 
     @Override
     public void update(Account newAccount){
-//        accountList.forEach(
-//                account -> {
-//                    if (account.getId().equals(newAccount.getId())) {
-//                        Integer index = accountList.indexOf(account);
-//                        newAccount.setUpdateTime(LocalDateTime.now());
-//                        accountList.set(index, newAccount);
-//                    }
-//                });
-
-
         Optional<Account> account = this.get(newAccount.getId());
         account.ifPresent(a -> {
             int accountIndex = accountList.indexOf(a);

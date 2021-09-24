@@ -1,8 +1,6 @@
 package com.example.bookkeeping.Entity;
 
-import lombok.Builder;
 import lombok.Data;
-import lombok.Generated;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
@@ -14,7 +12,6 @@ import static javax.persistence.GenerationType.IDENTITY;
 @NoArgsConstructor //無參建構子
 @Entity
 @Table(name = "account")
-//@Builder
 public class Account {
 
     @Id
@@ -28,7 +25,6 @@ public class Account {
     private LocalDateTime updateTime = LocalDateTime.now(); // 更新時間
     private String remark; // 備註
 
-//    public  Account(){ }
 
     public Account(Integer id,Double amount,String item,String remark){
         this.id = id;
@@ -37,12 +33,4 @@ public class Account {
         this.remark = remark;
     }
 
-//    public Account create(Integer id,Double amount,String item,String remark){
-//        return Account.builder()
-//                .id(id)
-//                .amount(amount)
-//                .item(item)
-//                .remark(remark)
-//                .build();
-//    }
 }

@@ -43,15 +43,16 @@ public class BookKeepingCtr {
   @CrossOrigin
   @PostMapping("search")
   public Result<QueryInfoDto> search(@RequestBody(required = false) SearchAccountVo searchAccountVo) {
-      if(searchAccountVo == null)
-        searchAccountVo = new SearchAccountVo();
-
-      return bookKeepingService.searchAccount(searchAccountVo);
+    searchAccountVo = searchAccountVo == null ? new SearchAccountVo() : searchAccountVo;
+    searchAccountVo.validate();
+    return bookKeepingService.searchAccount(searchAccountVo);
   }
 
   @CrossOrigin
   @PostMapping("report")
-  public ReportInfoDto report(@RequestBody SearchAccountVo searchAccountVo) {
+  public ReportInfoDto report(@RequestBody(required = false) SearchAccountVo searchAccountVo) {
+    searchAccountVo = searchAccountVo == null ? new SearchAccountVo() : searchAccountVo;
+    searchAccountVo.validate();
     return bookKeepingService.report(searchAccountVo);
   }
 

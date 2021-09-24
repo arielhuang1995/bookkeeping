@@ -2,34 +2,21 @@ package com.example.bookkeeping.Dao;
 
 import com.example.bookkeeping.Controller.vo.SearchAccountVo;
 import com.example.bookkeeping.Entity.Account;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 import javax.transaction.Transactional;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Component
-//@RequiredArgsConstructor
+@ConditionalOnProperty(value = "app.api.factory", havingValue = "db")
 public class AccountDaoDB implements IAccountDao {
 
     //call jpa
     @Autowired
     private AccountRepository accountRepository;
-//    private final AccountRepository accountRepository;
-
-//    public AccountDaoDB(AccountRepository accountRepository) {
-//        this.accountRepository = accountRepository;
-//    }
 
     @Override
     @Transactional

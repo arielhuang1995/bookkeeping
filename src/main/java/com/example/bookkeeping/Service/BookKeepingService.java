@@ -2,9 +2,6 @@ package com.example.bookkeeping.Service;
 
 import com.example.bookkeeping.Controller.vo.AccountVo;
 import com.example.bookkeeping.Controller.vo.SearchAccountVo;
-import com.example.bookkeeping.Dao.AccountDaoDB;
-import com.example.bookkeeping.Dao.AccountDaoMock;
-import com.example.bookkeeping.Dao.AccountRepository;
 import com.example.bookkeeping.Dao.IAccountDao;
 import com.example.bookkeeping.Entity.Account;
 import com.example.bookkeeping.Service.Dto.QueryInfoDto;
@@ -14,8 +11,8 @@ import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,16 +25,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookKeepingService {
 
-//  private final IAccountDao accountDAO = new AccountDaoDB(new AccountRepository());
   private final IAccountDao accountDAO;
-//  private final AccountDaoDB accountDAO;
 
   public Result<Account> createAccount(AccountVo accountVo) {
-    Preconditions.checkNotNull(accountVo.getAmount(), "請輸入金額");
-    Preconditions.checkState(Strings.isNotBlank(accountVo.getItem()), "請輸入項目");
+    Preconditions.checkNotNull(accountVo.getAmount(), "Please Enter Amount");
+    Preconditions.checkState(Strings.isNotBlank(accountVo.getItem()), "Please Enter Item");
 
     Account accountEntity = new Account();
-    accountEntity.setCreateTime(LocalDateTime.now());
     accountEntity.setAmount(accountVo.getAmount());
     accountEntity.setItem(accountVo.getItem());
     accountEntity.setRemark(accountVo.getRemark());
@@ -64,19 +58,19 @@ public class BookKeepingService {
   }
 
   public void deleteAccount(Integer id) {
+    this.findAccountById(id);
     accountDAO.delete(id);
   }
 
   public void updateAccount(AccountVo vo) {
 
     Optional<Account> accountFromDB = accountDAO.get(vo.getId());
-//    Preconditions.checkState(accountFromDB.isPresent(), "查無此筆資料！");
 
     accountFromDB.ifPresent(a -> {
       a.setItem(vo.getItem());
       a.setAmount(vo.getAmount());
       a.setRemark(vo.getRemark());
-//      a.setUpdateTime(LocalDateTime.now());
+      a.setUpdateTime(LocalDateTime.now());
 
       accountDAO.update(a);
     });
@@ -114,9 +108,16 @@ public class BookKeepingService {
   }
 
   public ReportInfoDto report(SearchAccountVo searchAccountVo) {
-
-    Preconditions.checkNotNull(searchAccountVo, "請輸入查詢時間");
     List<Account> accountList = accountDAO.query(searchAccountVo);
+
+    if(CollectionUtils.isEmpty(accountList)) {
+      log.info("No Data");
+      return ReportInfoDto.builder()
+              .sumOfAmount(0d)
+              .avgOfAmount(0d)
+              .maxAmount(0d)
+              .build();
+    }
 
     return ReportInfoDto.builder()
             .sumOfAmount(calcSumOfAmount(accountList))
@@ -126,11 +127,13 @@ public class BookKeepingService {
   }
 
   public Account findAccountById(Integer id){
-    return accountDAO.get(id).get();
+    Optional<Account> account = accountDAO.get(id);
+    Preconditions.checkState(account.isPresent(),"ID Not Exit!");
+    return account.get();
   }
 
   private double calcAvgOfAmount(List<Account> accountList) {
-    BigDecimal bdSumOfAmount = BigDecimal.valueOf(calcSumOfAmount(accountList));//TODO 處理空值情況
+    BigDecimal bdSumOfAmount = BigDecimal.valueOf(calcSumOfAmount(accountList));
     BigDecimal bdAccountNum = new BigDecimal(accountList.size());
 
     return bdSumOfAmount.divide(bdAccountNum, 2).doubleValue();

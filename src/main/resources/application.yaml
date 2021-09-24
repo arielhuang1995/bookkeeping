@@ -14,3 +14,6 @@ spring:
     hikari:
       minimumIdle: 120
       maximumPoolSize: 150
+app:
+  api:
+    factory: monk

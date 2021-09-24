@@ -7,23 +7,24 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Result<T> {
 
-    private T data;
+  private T data;
 
-    private Boolean success = false;
+  private Boolean success = false;
 
-    private String errMsg;
+  private String errMsg;
 
-    private String errCode;
+  private String errCode;
 
-    public String toViewErrorMsg(){
-        if (errCode=="1") {
-            return "請聯絡管理員";
-        }
+  public String toViewErrorMsg() {
 
-        if (this.errCode.equals("2")) {
-            return "系統爆炸，請登出!!";
-        }
-
-        return "OK";
+    if (this.errCode.equals("1")) {
+      return "Please Contact The Administrator";
     }
+
+    if (this.errCode.equals("2")) {
+      return "System Error";
+    }
+
+    return "OK";
+  }
 }
